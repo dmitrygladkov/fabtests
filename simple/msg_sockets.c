@@ -37,6 +37,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <rdma/fi_errno.h>
 #include <rdma/fi_endpoint.h>
@@ -239,8 +240,22 @@ static int client_connect(void)
 	uint32_t event;
 	ssize_t rd;
 	int ret;
+	struct sockaddr_in *dest_addr = NULL;
+	char *opts_dest_addr = NULL;
+	char *opts_dest_port = NULL;
+	const char *sendBuf = "Some data to server";
 
-	ret = fi_getinfo(FT_FIVERSION, opts.dst_addr, opts.dst_port, 0, hints, &fi);
+	switch (opts.dest_mode) {
+	case FT_DEST_ADDR_ONLY_IN_FI_CONN:
+		break;
+	case FT_DEST_ADDR_IN_FI_INFO:
+	default:
+		opts_dest_addr = opts.dst_addr;
+		opts_dest_port = opts.dst_port;
+		break;
+	}
+
+	ret = fi_getinfo(FT_FIVERSION, opts_dest_addr, opts_dest_port, 0, hints, &fi);
 	if (ret) {
 		FT_PRINTERR("fi_getinfo", ret);
 		return ret;
@@ -273,11 +288,40 @@ static int client_connect(void)
 	if (ret)
 		return ret;
 
+	switch (opts.dest_mode) {
+	case FT_DEST_ADDR_ONLY_IN_FI_CONN:
+		ret = fi_send(ep, sendBuf, strlen(sendBuf) + 1, fi_mr_desc(mr),
+					remote_fi_addr, NULL);
+		if (ret >= 0) {
+			FT_ERR("Unexpected result of fi_send - %d (ep %p)", ret, ep);
+			return -FI_EOTHER;
+		}
+		/* Allocate and fill destination address of server */
+		dest_addr = calloc(1, sizeof(struct sockaddr_in));
+		if (!dest_addr) {
+			return -FI_ENOMEM;
+		}
+		dest_addr->sin_family = AF_INET;
+		dest_addr->sin_port = htons(atoi(opts.dst_port));
+		inet_aton(opts.dst_addr, &dest_addr->sin_addr);
+		break;
+	case FT_DEST_ADDR_IN_FI_INFO:
+	default:
+		dest_addr = fi->dest_addr;
+		break;
+	}
+
 	/* Connect to server */
-	ret = fi_connect(ep, fi->dest_addr, NULL, 0);
+	ret = fi_connect(ep, dest_addr, NULL, 0);
 	if (ret) {
 		FT_PRINTERR("fi_connect", ret);
+		free(dest_addr);
 		return ret;
+	}
+
+	/* Free destination address of server */
+	if (opts.dest_mode == FT_DEST_ADDR_ONLY_IN_FI_CONN) {
+		free(dest_addr);
 	}
 
 	/* Wait for the connection to be established */
@@ -446,16 +490,17 @@ int main(int argc, char **argv)
 
 	opts = INIT_OPTS;
 	opts.options |= FT_OPT_SIZE;
+	opts.dest_mode = FT_DEST_ADDR_IN_FI_INFO;
 
 	hints = fi_allocinfo();
 	if (!hints)
 		return EXIT_FAILURE;
 
-	while ((op = getopt(argc, argv, "h" ADDR_OPTS INFO_OPTS)) != -1) {
+	while ((op = getopt(argc, argv, "h" CS_OPTS INFO_OPTS)) != -1) {
 		switch (op) {
 		default:
-			ft_parse_addr_opts(op, optarg, &opts);
 			ft_parseinfo(op, optarg, hints);
+			ft_parsecsopts(op, optarg, &opts);
 			break;
 		case '?':
 		case 'h':

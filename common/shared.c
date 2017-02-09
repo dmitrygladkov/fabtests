@@ -1660,6 +1660,7 @@ void ft_csusage(char *name, char *desc)
 	FT_PRINT_OPTS_USAGE("-m", "machine readable output");
 	FT_PRINT_OPTS_USAGE("-t <type>", "completion type [queue, counter]");
 	FT_PRINT_OPTS_USAGE("-c <method>", "completion method [spin, sread, fd]");
+	FT_PRINT_OPTS_USAGE("-u", "set destination addr:port in fi_connect only");
 	FT_PRINT_OPTS_USAGE("-h", "display this help output");
 
 	return;
@@ -1771,6 +1772,9 @@ void ft_parsecsopts(int op, char *optarg, struct ft_opts *opts)
 		break;
 	case 'l':
 		opts->options |= FT_OPT_ALIGN;
+		break;
+	case 'u':
+		opts->dest_mode = FT_DEST_ADDR_ONLY_IN_FI_CONN;
 		break;
 	default:
 		/* let getopt handle unknown opts*/

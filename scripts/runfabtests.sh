@@ -81,6 +81,7 @@ simple_tests=(
 	"msg"
 	"msg_epoll"
 	"msg_sockets"
+	"msg_sockets -u"
 	"poll -t queue"
 	"poll -t counter"
 	"rdm"

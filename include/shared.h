@@ -123,6 +123,11 @@ enum ft_rma_opcodes {
 	FT_RMA_WRITEDATA,
 };
 
+enum ft_dest_addr_mode {
+	FT_DEST_ADDR_IN_FI_INFO = 0,
+	FT_DEST_ADDR_ONLY_IN_FI_CONN = 1
+};
+
 struct ft_opts {
 	int iterations;
 	int warmup_iterations;
@@ -140,6 +145,7 @@ struct ft_opts {
 	enum ft_rma_opcodes rma_op;
 	int argc;
 	char **argv;
+	enum ft_dest_addr_mode dest_mode;
 };
 
 extern struct fi_info *fi_pep, *fi, *hints;
@@ -200,7 +206,7 @@ extern int listen_sock;
 #define ADDR_OPTS "B:P:s:a:"
 #define FAB_OPTS "f:d:p:"
 #define INFO_OPTS FAB_OPTS "e:"
-#define CS_OPTS ADDR_OPTS "I:S:mc:t:w:l"
+#define CS_OPTS ADDR_OPTS "I:S:mc:t:w:lu"
 
 extern char default_port[8];
 
