@@ -485,7 +485,7 @@ static int exchange_multiple_iovecs_via_rma(void) {
 		fprintf(stdout, "Data was written in client's buffer "
 			"and shared with peer\n");
 
-		Sleep(2000);
+		Sleep(5000);
 	}
 	else {
 		memset(rma_location, 0, sizeof(rma_location));
@@ -504,7 +504,7 @@ static int exchange_multiple_iovecs_via_rma(void) {
 		memcpy(rma_location, rx_buf, sizeof(rma_location));
 
 		void *desc_array[15];
-		memset(desc_array, 0, 15);
+
 		for (i = 0; i < 15; i++) {
 			if ((ret = fi_mr_reg(domain, server_iov[i].iov_base,
 				server_iov[i].iov_len,
@@ -540,7 +540,7 @@ static int exchange_multiple_iovecs_via_rma(void) {
 
 		fprintf(stdout, "Data was written in provided buffer\n");
 
-		Sleep(2000);
+		Sleep(5000);
 
 		ret = fi_readmsg(ep, &rma_msg, 0);
 		if (ret) {
@@ -848,7 +848,7 @@ int main(int argc, char **argv)
 
 	hints->ep_attr->type = FI_EP_MSG;
 	hints->caps = FI_MSG | FI_RMA | FI_RECV | FI_SEND;
-	hints->mode = FI_CONTEXT;
+	hints->mode = FI_LOCAL_MR;
 	hints->addr_format = FI_SOCKADDR;
 
 	ret = run();
