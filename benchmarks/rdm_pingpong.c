@@ -32,17 +32,39 @@
 #include <getopt.h>
 
 #include <rdma/fi_errno.h>
+#include <rdma/fi_endpoint.h>
+#include <rdma/fi_cm.h>
+
+#include <rdma/fi_errno.h>
 
 #include "shared.h"
 #include "benchmark_shared.h"
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 static int run(void)
 {
 	int i, ret = 0;
+	struct sockaddr_in sock_addr;
+	size_t sock_addrlen = sizeof(sock_addr);
 
 	ret = ft_init_fabric();
 	if (ret)
 		return ret;
+	ret = fi_getname(&ep->fid, &sock_addr, &sock_addrlen);
+	if (ret) {
+	    fprintf(stderr, "Error ret = %d \n", ret);
+		return ret;
+	}
+	fprintf(stderr, "GetName: addr = %s, port = %d\n",
+		inet_ntoa(sock_addr.sin_addr),
+		ntohs(sock_addr.sin_port));
+	fprintf(stderr, "Info: addr = %s, port = %d\n",
+		inet_ntoa(sock_addr.sin_addr),
+		ntohs(sock_addr.sin_port));
+	
 
 	if (!(opts.options & FT_OPT_SIZE)) {
 		for (i = 0; i < TEST_CNT; i++) {
