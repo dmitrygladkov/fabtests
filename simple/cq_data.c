@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 
 	hints->ep_attr->type = FI_EP_MSG;
 	hints->caps = FI_MSG;
+	hints->mode = FI_RX_CQ_DATA;
 	hints->domain_attr->mr_mode = FI_MR_LOCAL | OFI_MR_BASIC_MAP;
 
 	cq_attr.format = FI_CQ_FORMAT_DATA;
