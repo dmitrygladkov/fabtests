@@ -6,6 +6,11 @@ if MACOS
 os_excludes = -f ./test_configs/osx.exclude
 endif
 
+if LINUX
+rxm_tcp_testing = ./scripts/runfabtests.sh -vvv -S $(os_excludes) -R \
+		-f ./test_configs/ofi_rxm/ofi_rxm.exclude "tcp;ofi_rxm"
+endif
+
 bin_PROGRAMS = \
 	functional/fi_av_xfer \
 	functional/fi_msg \
@@ -323,3 +328,4 @@ dist-hook: fabtests.spec
 test:
 	./scripts/runfabtests.sh -vvv -S $(os_excludes)
 	./scripts/runfabtests.sh -vvv -S $(os_excludes) -R -f ./test_configs/udp/udp.exclude udp
+	$(rxm_tcp_testing)
